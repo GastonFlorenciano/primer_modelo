@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detector de Toxicidad</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #resultado {
+      margin-top: 20px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Detector de Toxicidad</h2>
+    <input type="text" id="texto" placeholder="Escribe una palabra o frase">
+    <button onclick="analizar()">Analizar</button>
+    <div id="resultado">Esperando entrada...</div>
+  </div>
+
+  <script>
+    let modelo;
+    toxicity.load(0.5).then(m => modelo = m);
+
+    function analizar() {
+      const texto = document.getElementById("texto").value;
+      const res = document.getElementById("resultado");
+      if (!modelo || !texto.trim()) return res.innerText = "Esperando modelo o entrada válida.";
+
+      modelo.classify([texto]).then(pred => {
+        res.innerHTML = "";
+        let toxic = false;
+        pred.forEach(p => {
+          const prob = (p.results[0].probabilities[1] * 100).toFixed(2);
+          const esToxico = p.results[0].match;
+          if (esToxico) toxic = true;
+          res.innerHTML += `${esToxico ? "⚠️" : "✅"} ${p.label}: ${prob}%<br>`;
+        });
+        if (!toxic) res.innerHTML += "<br>✅ No se detectó toxicidad.";
+      });
+    }
+  </script>
+</body>
+</html>
